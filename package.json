@@ -1,8 +1,8 @@
 {
   "name": "expense_tracker_api",
   "version": "0.0.1",
-  "description": "",
-  "author": "",
+  "description": "expense tracker and personal money manager api",
+  "author": "Sampath Sanjeewa",
   "private": true,
   "license": "UNLICENSED",
   "scripts": {
