@@ -1,4 +1,21 @@
 {
+  "plugins": [
+    "@trivago/prettier-plugin-sort-imports"
+  ],
+  "importOrderParserPlugins": [
+    "typescript",
+    "decorators-legacy"
+  ],
   "singleQuote": true,
-  "trailingComma": "all"
+  "trailingComma": "all",
+  "bracketSpacing": true,
+  "endOfLine": "lf",
+  "importOrder": [
+    "^@nest/(.*)$",
+    "^[a-zA-Z]+/(.*)$",
+    "^[/]",
+    "^[./]"
+  ],
+  "importOrderSeparation": true,
+  "importOrderSortSpecifiers": true
 }
