@@ -56,9 +56,9 @@ async function bootstrap() {
   );
 
   const config = new DocumentBuilder()
-    .setTitle('IPP Core API')
-    .setDescription('The Inbay Partner Portal Core API')
-    .setVersion('2.0')
+    .setTitle('Expense Tracker API')
+    .setDescription('Expense Tracker API')
+    .setVersion('1.0')
     .build();
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('docs/swagger', app, document);
