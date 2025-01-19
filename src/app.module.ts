@@ -8,8 +8,8 @@ import {
   MongodbConfigModule,
   MongooseOptionsService,
 } from './config';
-import { UsersModule } from './modules/users/users.module';
 import { CategoriesModule } from './modules/categories/categories.module';
+import { UsersModule } from './modules/users/users.module';
 
 @Module({
   imports: [
