@@ -11,7 +11,7 @@ import * as _ from 'lodash';
 
 import { Role } from 'src/common/enums/roles.enum';
 
-export class CreateUserDto {
+export class CreateUserDTO {
   @ApiProperty({ example: 'john@example.com', required: true })
   @IsEmail()
   @IsNotEmpty()

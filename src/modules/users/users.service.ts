@@ -1,12 +1,13 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import * as bcrypt from 'bcrypt';
 import { Model } from 'mongoose';
 
 import { AuthConfigService } from 'src/config';
 
-import { CreateUserDto } from './dto/create-user.dto';
+import { CreateUserDTO } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { ValidateUserDTO } from './dto/validate-and-return.dto';
 import { User, UserDocument } from './schemas/user.schema';
 
 @Injectable()
@@ -24,7 +25,7 @@ export class UsersService {
    * @param createUserDto
    * @returns
    */
-  async create(createUserDto: CreateUserDto) {
+  async create(createUserDto: CreateUserDTO) {
     try {
       // get password hash
       const salt = await bcrypt.genSalt(this.authConfigSvc.saltRounds);
@@ -37,6 +38,35 @@ export class UsersService {
       return user;
     } catch (error) {
       this.logger.error(`Error while creating user, `, error);
+      throw error;
+    }
+  }
+
+  /**
+   * ANCHOR validate user
+   * @param params
+   * @returns
+   */
+  async validateUser(params: ValidateUserDTO) {
+    try {
+      const user = await this.userModel
+        .findOne({ email: params.email, active: true, _deleted: false })
+        .lean()
+        .exec();
+
+      if (!user) throw new UnauthorizedException();
+
+      const validate = await bcrypt.compare(user?.password, params.password);
+
+      if (!!validate) {
+        return {
+          name: user.name,
+          email: user.email,
+          role: user.role,
+        };
+      }
+    } catch (error) {
+      this.logger.error(`Error while validating user, `, error);
       throw error;
     }
   }

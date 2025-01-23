@@ -1,9 +1,8 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Transform } from 'class-transformer';
-import { HydratedDocument, SchemaTypes } from 'mongoose';
+import { HydratedDocument } from 'mongoose';
 
 import { Role } from 'src/common/enums/roles.enum';
-import { Category } from 'src/modules/categories/schemas/category.schema';
 
 export type UserDocument = HydratedDocument<User>;
 
@@ -48,11 +47,16 @@ export class User {
   password: string;
 
   @Prop({
-    type: [SchemaTypes.ObjectId],
-    ref: Category.name,
-    required: false,
+    type: Boolean,
+    default: false,
   })
-  categories: Array<Category>;
+  _deleted: boolean;
+
+  @Prop({
+    type: Boolean,
+    default: false,
+  })
+  active: boolean;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);
