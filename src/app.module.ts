@@ -3,6 +3,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+import { AuthModule } from './auth/auth.module';
 import {
   AppConfigModule,
   MongodbConfigModule,
@@ -20,6 +21,7 @@ import { UsersModule } from './modules/users/users.module';
     }),
     UsersModule,
     CategoriesModule,
+    AuthModule,
   ],
   controllers: [AppController],
   providers: [AppService],

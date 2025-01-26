@@ -1,13 +1,12 @@
-import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import * as bcrypt from 'bcrypt';
-import { Model } from 'mongoose';
+import { Model, isValidObjectId } from 'mongoose';
 
 import { AuthConfigService } from 'src/config';
 
 import { CreateUserDTO } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { ValidateUserDTO } from './dto/validate-and-return.dto';
 import { User, UserDocument } from './schemas/user.schema';
 
 @Injectable()
@@ -42,45 +41,36 @@ export class UsersService {
     }
   }
 
+  findAll() {
+    return `This action returns all users`;
+  }
+
   /**
-   * ANCHOR validate user
-   * @param params
+   * ANCHOR fetch one user
+   * @param uniqId
    * @returns
    */
-  async validateUser(params: ValidateUserDTO) {
+  async findOne(uniqId: string) {
     try {
       const user = await this.userModel
-        .findOne({ email: params.email, active: true, _deleted: false })
+        .findOne({
+          ...(isValidObjectId(uniqId) ? { _id: uniqId } : { email: uniqId }),
+          _deleted: false,
+        })
         .lean()
         .exec();
 
-      if (!user) throw new UnauthorizedException();
+      if (!user) throw new NotFoundException();
 
-      const validate = await bcrypt.compare(user?.password, params.password);
-
-      if (!!validate) {
-        return {
-          name: user.name,
-          email: user.email,
-          role: user.role,
-        };
-      }
+      return user;
     } catch (error) {
       this.logger.error(`Error while validating user, `, error);
       throw error;
     }
   }
 
-  findAll() {
-    return `This action returns all users`;
-  }
-
-  findOne(id: number) {
-    return `This action returns a #${id} user`;
-  }
-
   update(id: number, updateUserDto: UpdateUserDto) {
-    return `This action updates a #${id} user`;
+    return `This action updates a #${id} user ${updateUserDto}`;
   }
 
   remove(id: number) {

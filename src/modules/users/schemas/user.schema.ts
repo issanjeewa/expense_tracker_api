@@ -41,7 +41,6 @@ export class User {
   role: Role;
 
   @Prop({
-    select: false,
     required: [true, 'Please enter a password'],
   })
   password: string;
