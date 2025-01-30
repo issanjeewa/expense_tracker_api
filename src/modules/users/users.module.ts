@@ -3,7 +3,9 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { mongooseLeanVirtuals } from 'mongoose-lean-virtuals';
 
 import { AuthConfigModule } from 'src/config';
+import { EmailModule } from 'src/shared-modules/email/email.module';
 
+import { UserCreatedEventHandler } from './handlers/user-created.handler';
 import { User, UserSchema } from './schemas/user.schema';
 import { UsersController } from './users.controller';
 import { UsersService } from './users.service';
@@ -21,9 +23,10 @@ import { UsersService } from './users.service';
       },
     ]),
     AuthConfigModule,
+    EmailModule,
   ],
   controllers: [UsersController],
-  providers: [UsersService],
+  providers: [UsersService, UserCreatedEventHandler],
   exports: [UsersService],
 })
 export class UsersModule {}

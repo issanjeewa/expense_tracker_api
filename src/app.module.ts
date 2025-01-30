@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { EventEmitterModule } from '@nestjs/event-emitter';
 import { MongooseModule } from '@nestjs/mongoose';
 
 import { AppController } from './app.controller';
@@ -20,6 +21,7 @@ import { EmailModule } from './shared-modules/email/email.module';
       imports: [MongodbConfigModule],
       useClass: MongooseOptionsService,
     }),
+    EventEmitterModule.forRoot(),
     UsersModule,
     CategoriesModule,
     AuthModule,

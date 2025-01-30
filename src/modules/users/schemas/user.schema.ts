@@ -53,9 +53,14 @@ export class User {
 
   @Prop({
     type: Boolean,
-    default: true, // FIXME set default to false after creating email verification
+    default: false, // FIXME set default to false after creating email verification
   })
   active: boolean;
+
+  @Prop({
+    type: String,
+  })
+  verificationToken: string;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

@@ -9,8 +9,11 @@ import {
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 
+import { ParseMongoIdPipe } from 'src/common/pipes/parse-mongoid.pipe';
+
 import { CreateUserDTO } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { VerifyEmailDTO } from './dto/verify-email.dto';
 import { UsersService } from './users.service';
 
 @ApiTags('Users')
@@ -21,6 +24,14 @@ export class UsersController {
   @Post()
   create(@Body() createUserDto: CreateUserDTO) {
     return this.usersService.create(createUserDto);
+  }
+
+  @Post(':id/verify-email')
+  verifyEmail(
+    @Param('id', ParseMongoIdPipe) userId: string,
+    @Body() verifyEmailDTO: VerifyEmailDTO,
+  ) {
+    return this.usersService.verifyEmail(userId, verifyEmailDTO.token);
   }
 
   @Get()

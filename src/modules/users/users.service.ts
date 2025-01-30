@@ -1,12 +1,21 @@
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  Logger,
+  NotFoundException,
+} from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { InjectModel } from '@nestjs/mongoose';
 import * as bcrypt from 'bcrypt';
+import * as _ from 'lodash';
 import { Model, isValidObjectId } from 'mongoose';
 
+import { Events } from 'src/common/enums/events.enum';
 import { AuthConfigService } from 'src/config';
 
 import { CreateUserDTO } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { UserCreatedEvent } from './events/user-created.event';
 import { User, UserDocument } from './schemas/user.schema';
 
 @Injectable()
@@ -17,6 +26,7 @@ export class UsersService {
     @InjectModel(User.name)
     private userModel: Model<UserDocument>,
     private readonly authConfigSvc: AuthConfigService,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
 
   /**
@@ -27,16 +37,84 @@ export class UsersService {
   async create(createUserDto: CreateUserDTO) {
     try {
       // get password hash
-      const salt = await bcrypt.genSalt(this.authConfigSvc.saltRounds);
-      const pwdHash = await bcrypt.hash(createUserDto.password, salt);
+      const checkExists = await this.userModel.exists({
+        email: createUserDto.email,
+      });
+
+      if (checkExists) {
+        throw new ConflictException('User already exists');
+      }
+
+      const pwdHash = await bcrypt.hash(
+        createUserDto.password,
+        await bcrypt.genSalt(this.authConfigSvc.saltRounds),
+      );
+
+      // create 6 digit random number
+      const verToken = Math.floor(100000 + Math.random() * 900000).toString();
+      const tokenHash = await bcrypt.hash(
+        verToken.toString(),
+        await bcrypt.genSalt(this.authConfigSvc.saltRounds),
+      );
 
       const user = await this.userModel.create({
         ...createUserDto,
         password: pwdHash,
+        verificationToken: tokenHash,
       });
-      return user;
+
+      // create event
+      const userCreatedEvent = new UserCreatedEvent(
+        user.email,
+        user.name,
+        verToken,
+      );
+
+      // emit the event
+      this.eventEmitter.emit(Events.USER_CREATED, userCreatedEvent);
+
+      // return response
+      return _.pick(user, ['id', 'email', 'name']);
     } catch (error) {
       this.logger.error(`Error while creating user, `, error);
+      throw error;
+    }
+  }
+
+  /**
+   * ANCHOR verify email
+   * @param userId
+   * @param token
+   * @returns
+   */
+  async verifyEmail(userId: string, token: string) {
+    try {
+      const user = await this.userModel
+        .findOne({
+          _id: userId,
+          _deleted: false,
+        })
+        .exec();
+
+      if (!user?.verificationToken || user?.active) {
+        this.logger.log(
+          `User already verified or token not found, terminating verification`,
+          user.email,
+        );
+        throw new NotFoundException('Invalid user or token');
+      }
+
+      if (!(await bcrypt.compare(token, user.verificationToken))) {
+        throw new ConflictException('Invalid user or token');
+      }
+
+      user.active = true;
+      user.verificationToken = null;
+      await user.save();
+
+      return _.pick(user, ['id', 'email', 'name', 'active']);
+    } catch (error) {
+      this.logger.error(`Error while verifying email, `, error);
       throw error;
     }
   }
