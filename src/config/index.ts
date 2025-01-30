@@ -8,3 +8,6 @@ export * from './database/mongoose/mongoose-options.service';
 
 export * from './auth/auth-config.module';
 export * from './auth/auth-config.service';
+
+export * from './email/email-config.module';
+export * from './email/email-config.service';

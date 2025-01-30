@@ -53,7 +53,7 @@ export class User {
 
   @Prop({
     type: Boolean,
-    default: false,
+    default: true, // FIXME set default to false after creating email verification
   })
   active: boolean;
 }
