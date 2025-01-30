@@ -6,6 +6,7 @@ import { Role } from 'src/common/enums/roles.enum';
 
 import { AuthService } from './auth.service';
 import { Auth } from './decorators/auth.decorator';
+import { User } from './decorators/user.decorator';
 import { LocalAuthGuard } from './guards/local-auth.guard';
 import { CurrentUser } from './types';
 
@@ -22,7 +23,7 @@ export class AuthController {
 
   @Auth(Role.ADMIN, Role.USER)
   @Get('currentuser')
-  getProfile(@Request() req: ExRequest) {
-    return req.user;
+  getProfile(@User() user: CurrentUser) {
+    return user;
   }
 }
