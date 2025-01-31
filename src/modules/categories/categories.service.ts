@@ -46,7 +46,7 @@ export class CategoriesService {
       } else {
         const category = await this.categoryModel.create({
           ...createCategoryDto,
-          type: Role.USER,
+          type: CategoryType.USER,
           user: user.id,
         });
 
