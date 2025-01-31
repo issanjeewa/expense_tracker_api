@@ -2,17 +2,17 @@ import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { mongooseLeanVirtuals } from 'mongoose-lean-virtuals';
 
-import { User, UserSchema } from '../users/schemas/user.schema';
 import { CategoriesController } from './categories.controller';
 import { CategoriesService } from './categories.service';
+import { Category, CategorySchema } from './schemas/category.schema';
 
 @Module({
   imports: [
     MongooseModule.forFeatureAsync([
       {
-        name: User.name,
+        name: Category.name,
         useFactory: () => {
-          const schema = UserSchema;
+          const schema = CategorySchema;
           schema.plugin(mongooseLeanVirtuals);
           return schema;
         },

@@ -38,6 +38,13 @@ export class Category {
     required: false,
   })
   user?: User;
+
+  @Prop({
+    type: Boolean,
+    default: false,
+    index: true,
+  })
+  _deleted: boolean;
 }
 
 export const CategorySchema = SchemaFactory.createForClass(Category);

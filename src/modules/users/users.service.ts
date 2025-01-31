@@ -41,7 +41,7 @@ export class UsersService {
         email: createUserDto.email,
       });
 
-      if (checkExists) {
+      if (!!checkExists) {
         throw new ConflictException('User already exists');
       }
 
