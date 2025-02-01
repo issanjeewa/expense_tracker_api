@@ -1,4 +1,10 @@
-import { ConflictException, Injectable, Logger } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  Logger,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import * as _ from 'lodash';
 import { Model } from 'mongoose';
@@ -100,8 +106,49 @@ export class CategoriesService {
     return `This action returns a #${id} category`;
   }
 
-  update(id: number, updateCategoryDto: UpdateCategoryDto) {
-    return `This action updates a #${id} category ${updateCategoryDto}`;
+  /**
+   * ANCHOR update category
+   * @param id
+   * @param updateCategoryDto
+   * @param user
+   */
+  async update(
+    id: string,
+    updateCategoryDto: UpdateCategoryDto,
+    user: CurrentUser,
+  ) {
+    try {
+      const category = await this.categoryModel
+        .findOne({ _id: id, _deleted: false })
+        .exec();
+
+      if (!category) {
+        throw new NotFoundException('Category not found');
+      }
+
+      if (category.type === CategoryType.DEFAULT && user.role !== 'admin') {
+        throw new UnauthorizedException(
+          'Only admin can update default category',
+        );
+      }
+
+      if (
+        category.type === CategoryType.USER &&
+        user.id !== category?.user?._id?.toString()
+      ) {
+        throw new UnauthorizedException(
+          'You are not allowed to update this category',
+        );
+      }
+
+      category.name = updateCategoryDto.name;
+      await category.save();
+
+      return _.pick(category, 'id', 'name', 'type');
+    } catch (error) {
+      this.logger.error(`Error while updating category:`, error);
+      throw error;
+    }
   }
 
   remove(id: number) {

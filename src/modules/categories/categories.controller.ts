@@ -46,12 +46,14 @@ export class CategoriesController {
     return this.categoriesService.findOne(+id);
   }
 
+  @Auth(Role.ADMIN, Role.USER)
   @Patch(':id')
   update(
     @Param('id') id: string,
     @Body() updateCategoryDto: UpdateCategoryDto,
+    @User() user: CurrentUser,
   ) {
-    return this.categoriesService.update(+id, updateCategoryDto);
+    return this.categoriesService.update(id, updateCategoryDto, user);
   }
 
   @Delete(':id')
