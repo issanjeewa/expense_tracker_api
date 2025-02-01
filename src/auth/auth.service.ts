@@ -31,7 +31,7 @@ export class AuthService {
         return {
           active: user.active,
           email: user.email,
-          id: user._id,
+          id: user._id.toString(),
           name: user.name,
           role: user.role,
         };
