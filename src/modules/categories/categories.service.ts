@@ -5,9 +5,8 @@ import { Model } from 'mongoose';
 
 import { CurrentUser } from 'src/auth/types';
 import { CategoryType } from 'src/common/enums/categories.enum';
-import { Role } from 'src/common/enums/roles.enum';
 
-import { CreateCategoryDto } from './dto/create-category.dto';
+import { CreateCategoryDTO } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
 import { Category, CategoryDocument } from './schemas/category.schema';
 
@@ -24,7 +23,7 @@ export class CategoriesService {
    * @param createCategoryDto
    * @param user
    */
-  async create(createCategoryDto: CreateCategoryDto, user: CurrentUser) {
+  async create(createCategoryDto: CreateCategoryDTO, user: CurrentUser) {
     try {
       const checkCategory = await this.categoryModel
         .findOne({
@@ -48,6 +47,41 @@ export class CategoriesService {
           ...createCategoryDto,
           type: CategoryType.USER,
           user: user.id,
+        });
+
+        return _.pick(category, 'id', 'name', 'type');
+      }
+    } catch (error) {
+      this.logger.error(`Error creating category:`, error);
+      throw error;
+    }
+  }
+
+  /**
+   * ANCHOR create default categories
+   * @param createDto
+   * @param user
+   */
+  async createDefaultCategory(createDto: CreateCategoryDTO) {
+    try {
+      // check if category already exists
+      const checkCategory = await this.categoryModel
+        .findOne({ name: createDto.name, type: CategoryType.DEFAULT })
+        .exec();
+
+      if (!!checkCategory) {
+        if (!checkCategory._deleted) {
+          throw new ConflictException('Category already exists');
+        } else {
+          // if deleted, restore
+          checkCategory._deleted = false;
+          await checkCategory.save();
+          return _.pick(checkCategory, 'id', 'name', 'type');
+        }
+      } else {
+        const category = await this.categoryModel.create({
+          ...createDto,
+          type: CategoryType.DEFAULT,
         });
 
         return _.pick(category, 'id', 'name', 'type');

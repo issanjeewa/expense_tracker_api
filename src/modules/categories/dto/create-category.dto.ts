@@ -1,7 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsString, MaxLength, MinLength } from 'class-validator';
 
-export class CreateCategoryDto {
+export class CreateCategoryDTO {
   @ApiProperty({ type: String, example: 'Food' })
   @IsString()
   @MinLength(2, { message: 'Name should be at least 2 characters' })

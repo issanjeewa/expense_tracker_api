@@ -14,7 +14,7 @@ import { CurrentUser } from 'src/auth/types';
 import { Role } from 'src/common/enums/roles.enum';
 
 import { CategoriesService } from './categories.service';
-import { CreateCategoryDto } from './dto/create-category.dto';
+import { CreateCategoryDTO } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
 
 @Controller('categories')
@@ -24,10 +24,16 @@ export class CategoriesController {
   @Auth(Role.ADMIN, Role.USER)
   @Post()
   create(
-    @Body() createCategoryDto: CreateCategoryDto,
+    @Body() createCategoryDto: CreateCategoryDTO,
     @User() user: CurrentUser,
   ) {
     return this.categoriesService.create(createCategoryDto, user);
+  }
+
+  @Auth(Role.ADMIN)
+  @Post('default')
+  createDefault(@Body() createCategoryDto: CreateCategoryDTO) {
+    return this.categoriesService.createDefaultCategory(createCategoryDto);
   }
 
   @Get()
