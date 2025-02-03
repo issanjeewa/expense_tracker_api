@@ -41,9 +41,10 @@ export class CategoriesController {
     return this.categoriesService.findAll();
   }
 
+  @Auth(Role.ADMIN, Role.USER)
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.categoriesService.findOne(+id);
+  findOne(@Param('id') id: string, @User() user: CurrentUser) {
+    return this.categoriesService.findOne(id, user);
   }
 
   @Auth(Role.ADMIN, Role.USER)

@@ -102,8 +102,32 @@ export class CategoriesService {
     return `This action returns all categories`;
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} category`;
+  /**
+   * ANCHOR find one category
+   * @param id
+   * @returns
+   */
+  async findOne(id: string, user: CurrentUser) {
+    try {
+      const category = await this.categoryModel.findOne({
+        _id: id,
+        _deleted: false,
+      });
+
+      // check whether category is created by the same user or is it default
+      if (
+        !category ||
+        (category.type === CategoryType.USER &&
+          category?.user?._id?.toString() !== user.id)
+      ) {
+        throw new NotFoundException('Category not found');
+      }
+
+      return _.pick(category, 'id', 'name', 'type');
+    } catch (error) {
+      this.logger.error(`Error fetching:`, error);
+      throw error;
+    }
   }
 
   /**

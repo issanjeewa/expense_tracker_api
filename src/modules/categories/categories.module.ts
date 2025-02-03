@@ -1,6 +1,13 @@
-import { Module } from '@nestjs/common';
+import {
+  MiddlewareConsumer,
+  Module,
+  NestModule,
+  RequestMethod,
+} from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { mongooseLeanVirtuals } from 'mongoose-lean-virtuals';
+
+import { PaginationMiddlewareFactory } from 'src/common/middleware/pagination.middleware';
 
 import { CategoriesController } from './categories.controller';
 import { CategoriesService } from './categories.service';
@@ -22,4 +29,12 @@ import { Category, CategorySchema } from './schemas/category.schema';
   controllers: [CategoriesController],
   providers: [CategoriesService],
 })
-export class CategoriesModule {}
+export class CategoriesModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(PaginationMiddlewareFactory()).forRoutes({
+      method: RequestMethod.GET,
+      path: 'categories',
+      version: '2',
+    });
+  }
+}
