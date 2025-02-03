@@ -11,6 +11,7 @@ import { Model } from 'mongoose';
 
 import { CurrentUser } from 'src/auth/types';
 import { CategoryType } from 'src/common/enums/categories.enum';
+import { Role } from 'src/common/enums/roles.enum';
 
 import { CreateCategoryDTO } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
@@ -46,6 +47,8 @@ export class CategoriesService {
           // if deleted, restore
           checkCategory._deleted = false;
           await checkCategory.save();
+          // TODO add to audit log
+
           return _.pick(checkCategory, 'id', 'name', 'type');
         }
       } else {
@@ -54,6 +57,8 @@ export class CategoriesService {
           type: CategoryType.USER,
           user: user.id,
         });
+
+        // TODO add to audit log
 
         return _.pick(category, 'id', 'name', 'type');
       }
@@ -82,6 +87,9 @@ export class CategoriesService {
           // if deleted, restore
           checkCategory._deleted = false;
           await checkCategory.save();
+
+          // TODO add to audit log
+
           return _.pick(checkCategory, 'id', 'name', 'type');
         }
       } else {
@@ -89,6 +97,8 @@ export class CategoriesService {
           ...createDto,
           type: CategoryType.DEFAULT,
         });
+
+        // TODO add to audit log
 
         return _.pick(category, 'id', 'name', 'type');
       }
@@ -165,6 +175,8 @@ export class CategoriesService {
         );
       }
 
+      // TODO Add to audit log
+
       category.name = updateCategoryDto.name;
       await category.save();
 
@@ -175,7 +187,47 @@ export class CategoriesService {
     }
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} category`;
+  /**
+   * ANCHOR remove category
+   * @param id
+   * @param user
+   * @returns
+   */
+  async remove(id: string, user: CurrentUser) {
+    try {
+      const category = await this.categoryModel
+        .findOne({ _id: id, _deleted: false })
+        .exec();
+
+      if (!category) {
+        throw new NotFoundException('Category not found');
+      }
+
+      if (category.type === CategoryType.DEFAULT && user.role !== Role.ADMIN) {
+        throw new UnauthorizedException(
+          'Only admin can delete default category',
+        );
+      }
+
+      if (
+        category.type === CategoryType.USER &&
+        user.id !== category?.user?._id?.toString()
+      ) {
+        throw new UnauthorizedException(
+          'You are not allowed to delete this category',
+        );
+      }
+
+      // TODO check if category is used in any transaction
+      // TODO add to audit log
+
+      category._deleted = true;
+      await category.save();
+
+      return { message: 'Category deleted successfully' };
+    } catch (error) {
+      this.logger.error(`Error while updating category:`, error);
+      throw error;
+    }
   }
 }
