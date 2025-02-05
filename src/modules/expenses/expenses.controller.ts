@@ -51,6 +51,7 @@ export class ExpensesController {
   }
 
   @Get(':id')
+  @UseInterceptors(ResponseSerializerInterceptor)
   findOne(@Param('id', ParseMongoIdPipe) id: string) {
     return this.expensesService.findOne(+id);
   }
@@ -66,6 +67,7 @@ export class ExpensesController {
   }
 
   @Delete(':id')
+  @UseInterceptors(ResponseSerializerInterceptor)
   remove(@Param('id', ParseMongoIdPipe) id: string) {
     return this.expensesService.remove(+id);
   }

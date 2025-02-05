@@ -66,7 +66,7 @@ export class CategoriesService {
 
         // TODO add to audit log
 
-        return _.pick(category, 'id', 'name', 'type');
+        return category;
       }
     } catch (error) {
       this.logger.error(`Error creating category:`, error);
@@ -106,7 +106,7 @@ export class CategoriesService {
 
         // TODO add to audit log
 
-        return _.pick(category, 'id', 'name', 'type');
+        return category;
       }
     } catch (error) {
       this.logger.error(`Error creating category:`, error);
@@ -184,6 +184,7 @@ export class CategoriesService {
           _deleted: false,
         })
         .select(select)
+        .lean({ virtuals: true })
         .exec();
 
       if (!category) throw new NotFoundException(`Category not found`);
@@ -235,7 +236,7 @@ export class CategoriesService {
       category.name = updateCategoryDto.name;
       await category.save();
 
-      return _.pick(category, 'id', 'name', 'type');
+      return category;
     } catch (error) {
       this.logger.error(`Error while updating category:`, error);
       throw error;

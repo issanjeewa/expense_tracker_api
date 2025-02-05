@@ -30,6 +30,7 @@ export class CategoriesController {
 
   @Auth(Role.ADMIN, Role.USER)
   @Post()
+  @UseInterceptors(ResponseSerializerInterceptor)
   create(
     @Body() createCategoryDto: CreateCategoryDTO,
     @User() user: CurrentUser,
@@ -39,6 +40,7 @@ export class CategoriesController {
 
   @Auth(Role.ADMIN)
   @Post('default')
+  @UseInterceptors(ResponseSerializerInterceptor)
   createDefault(@Body() createCategoryDto: CreateCategoryDTO) {
     return this.categoriesService.createDefaultCategory(createCategoryDto);
   }
@@ -66,6 +68,7 @@ export class CategoriesController {
 
   @Auth(Role.ADMIN, Role.USER)
   @Patch(':id')
+  @UseInterceptors(ResponseSerializerInterceptor)
   update(
     @Param('id', ParseMongoIdPipe) id: string,
     @Body() updateCategoryDto: UpdateCategoryDto,
@@ -76,6 +79,7 @@ export class CategoriesController {
 
   @Auth(Role.ADMIN, Role.USER)
   @Delete(':id')
+  @UseInterceptors(ResponseSerializerInterceptor)
   remove(@Param('id', ParseMongoIdPipe) id: string, @User() user: CurrentUser) {
     return this.categoriesService.remove(id, user);
   }

@@ -99,6 +99,7 @@ export class ExpensesService {
         .sort(pagination.sortBy)
         .skip(pagination.offset)
         .limit(pagination.limit)
+        .lean({ virtuals: true })
         .exec();
 
       return expenses;
@@ -157,7 +158,7 @@ export class ExpensesService {
 
       await expense.save();
 
-      return { id: expense.id, message: `successfully updated` };
+      return expense;
     } catch (error) {
       this.logger.error(`Error while updating expense.`, error);
       throw error;

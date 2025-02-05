@@ -10,13 +10,20 @@ import {
 } from 'class-transformer';
 import { Document } from 'mongoose';
 
+import { convertObjectIdsToStrings } from 'src/utils/object-ids-to-string.util';
+
 @Injectable()
 export class ResponseSerializerInterceptor extends ClassSerializerInterceptor {
   private changeInstanceToPlainObject(data: PlainLiteralObject) {
     if (!(data instanceof Document)) {
-      return instanceToInstance(data, { excludePrefixes: ['_'] });
+      return instanceToInstance(convertObjectIdsToStrings(data), {
+        excludePrefixes: ['_'],
+      });
     }
-    return instanceToPlain(data.toJSON(), { excludePrefixes: ['_'] });
+
+    return instanceToPlain(convertObjectIdsToStrings(data.toJSON()), {
+      excludePrefixes: ['_'],
+    });
   }
 
   private prepareResponse(response: PlainLiteralObject | PlainLiteralObject[]) {
