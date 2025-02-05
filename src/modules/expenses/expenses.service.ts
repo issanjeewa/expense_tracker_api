@@ -1,16 +1,21 @@
 import {
+  BadRequestException,
   Injectable,
   Logger,
   NotFoundException,
   PreconditionFailedException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model, Types } from 'mongoose';
+import * as _ from 'lodash';
+import { FilterQuery, Model, Types } from 'mongoose';
 
 import { CurrentUser } from 'src/auth/types';
+import { PaginationProps } from 'src/common/middleware/pagination.middleware';
 
 import { CategoriesService } from '../categories/categories.service';
 import { CreateExpenseDTO } from './dto/create-expense.dto';
+import { FetchExpenseDTO } from './dto/fetch-expenses.dto';
+import { defaultExpenseFields } from './dto/projection-expense.dto';
 import { UpdateExpenseDTO } from './dto/update-expense.dto';
 import { Expense, ExpenseDocument } from './schemas/expense.schema';
 
@@ -52,8 +57,55 @@ export class ExpensesService {
     }
   }
 
-  findAll() {
-    return `This action returns all expenses`;
+  /**
+   * ANCHOR fetch expenses
+   * @param queryDto
+   * @param pagination
+   * @param user
+   */
+  async findAll(
+    queryDto: FetchExpenseDTO,
+    pagination: PaginationProps,
+    user: CurrentUser,
+  ) {
+    try {
+      const filter: FilterQuery<ExpenseDocument> = {
+        user: user.id,
+        ...(!!queryDto?.categoryId && { category: queryDto.categoryId }),
+        ...(!!queryDto?.amount && { amount: queryDto.amount }),
+        ...(!!queryDto?.currency && { currency: queryDto.currency }),
+        ...(!!queryDto?.description && {
+          description: { $regex: queryDto.description, $options: 'i' },
+        }),
+        ...((!!queryDto?.startDate || !!queryDto?.endDate) && {
+          date: this.generateDateQuery(queryDto?.startDate, queryDto?.endDate),
+        }),
+      };
+
+      const select = _.chain(
+        !!queryDto?.select?.length ? queryDto.select : defaultExpenseFields,
+      )
+        .keyBy()
+        .mapValues(() => 1)
+        .value();
+
+      const expensesQry = this.expenseModel.find(filter);
+
+      if (!!_.has(select, 'category'))
+        expensesQry.populate({ path: 'category', select: ['name'] });
+
+      const expenses = await expensesQry
+        .select(select)
+        .sort(pagination.sortBy)
+        .skip(pagination.offset)
+        .limit(pagination.limit)
+        .exec();
+
+      return expenses;
+    } catch (error) {
+      this.logger.error(`Error while fetching expenses`);
+      throw error;
+    }
   }
 
   findOne(id: number) {
@@ -115,4 +167,28 @@ export class ExpensesService {
   remove(id: number) {
     return `This action removes a #${id} expense`;
   }
+
+  // SECTION Private (supportive) functions
+
+  private generateDateQuery = (fromDate: Date | null, toDate: Date | null) => {
+    if (fromDate && toDate) {
+      if (fromDate > toDate) {
+        throw new BadRequestException(
+          'from date should be earlier than to date',
+        );
+      }
+      return {
+        $gte: fromDate,
+        $lte: new Date(toDate.setDate(toDate.getDate() + 1)),
+      };
+    } else if (!!fromDate && !toDate) {
+      return {
+        $gte: new Date(fromDate),
+      };
+    } else if (!fromDate && !!toDate) {
+      return {
+        $lte: new Date(toDate.setDate(toDate.getDate() + 1)),
+      };
+    }
+  };
 }
