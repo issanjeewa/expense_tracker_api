@@ -133,7 +133,7 @@ export class CategoriesService {
         throw new NotFoundException('Category not found');
       }
 
-      return _.pick(category, 'id', 'name', 'type');
+      return category;
     } catch (error) {
       this.logger.error(`Error fetching:`, error);
       throw error;

@@ -56,6 +56,9 @@ importers:
       compression:
         specifier: ^1.7.5
         version: 1.7.5
+      currencies.json:
+        specifier: ^1.0.2
+        version: 1.0.2
       figlet:
         specifier: ^1.8.0
         version: 1.8.0
@@ -1579,6 +1582,9 @@ packages:
   css-what@6.1.0:
     resolution: {integrity: sha512-HTUrgRJ7r4dsZKU6GjmpfRK1O76h97Z8MfS1G0FozR+oF2kG6Vfe8JE6zwrkbxigziPHinCJ+gCPjA9EaBDtRw==}
     engines: {node: '>= 6'}
+
+  currencies.json@1.0.2:
+    resolution: {integrity: sha512-5a9gHuZTS+s228BCF/nTWt+UP5RIZMs9f9oEryFHHvqNd+1qrSVeLJfxmCRlHlfLm8YDGRXfRRtkwru5LBd3mg==}
 
   debug@2.6.9:
     resolution: {integrity: sha512-bC7ElrdJaJnPbAP+1EotYvqZsb3ecl5wi6Bfi6BJTUcNowp6cvspg0jXznRTKDjm/E7AdgFBVeAPVMNcKGsHMA==}
@@ -5717,6 +5723,8 @@ snapshots:
 
   css-what@6.1.0:
     optional: true
+
+  currencies.json@1.0.2: {}
 
   debug@2.6.9:
     dependencies:

@@ -13,6 +13,7 @@ import {
 import { CategoriesModule } from './modules/categories/categories.module';
 import { UsersModule } from './modules/users/users.module';
 import { EmailModule } from './shared-modules/email/email.module';
+import { ExpensesModule } from './modules/expenses/expenses.module';
 
 @Module({
   imports: [
@@ -26,6 +27,7 @@ import { EmailModule } from './shared-modules/email/email.module';
     CategoriesModule,
     AuthModule,
     EmailModule,
+    ExpensesModule,
   ],
   controllers: [AppController],
   providers: [AppService],
