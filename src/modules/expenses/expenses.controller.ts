@@ -22,6 +22,7 @@ import { ParseMongoIdPipe } from 'src/common/pipes/parse-mongoid.pipe';
 
 import { CreateExpenseDTO } from './dto/create-expense.dto';
 import { FetchExpenseDTO } from './dto/fetch-expenses.dto';
+import { ProjectionExpenseDTO } from './dto/projection-expense.dto';
 import { UpdateExpenseDTO } from './dto/update-expense.dto';
 import { ExpensesService } from './expenses.service';
 
@@ -52,8 +53,12 @@ export class ExpensesController {
 
   @Get(':id')
   @UseInterceptors(ResponseSerializerInterceptor)
-  findOne(@Param('id', ParseMongoIdPipe) id: string) {
-    return this.expensesService.findOne(+id);
+  findOne(
+    @Param('id', ParseMongoIdPipe) id: string,
+    @Query() projection: ProjectionExpenseDTO,
+    @User() user: CurrentUser,
+  ) {
+    return this.expensesService.findOne(id, projection, user);
   }
 
   @Patch(':id')

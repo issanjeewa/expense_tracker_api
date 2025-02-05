@@ -15,7 +15,10 @@ import { PaginationProps } from 'src/common/middleware/pagination.middleware';
 import { CategoriesService } from '../categories/categories.service';
 import { CreateExpenseDTO } from './dto/create-expense.dto';
 import { FetchExpenseDTO } from './dto/fetch-expenses.dto';
-import { defaultExpenseFields } from './dto/projection-expense.dto';
+import {
+  ProjectionExpenseDTO,
+  defaultExpenseFields,
+} from './dto/projection-expense.dto';
 import { UpdateExpenseDTO } from './dto/update-expense.dto';
 import { Expense, ExpenseDocument } from './schemas/expense.schema';
 
@@ -38,6 +41,7 @@ export class ExpensesService {
     try {
       const category = await this.categoryService.findOne(
         createExpenseDto.category,
+        null,
         user,
       );
 
@@ -109,8 +113,40 @@ export class ExpensesService {
     }
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} expense`;
+  /**
+   * ANCHOR find a category
+   * @param id
+   * @param projection
+   * @param user
+   */
+  async findOne(
+    id: string,
+    projection: ProjectionExpenseDTO,
+    user: CurrentUser,
+  ) {
+    try {
+      const select = _.chain(
+        !!projection?.select?.length ? projection.select : defaultExpenseFields,
+      )
+        .keyBy()
+        .mapValues(() => 1)
+        .value();
+
+      const expense = await this.expenseModel
+        .findOne({
+          _id: id,
+          user: user.id,
+        })
+        .select(select)
+        .lean({ virtuals: true });
+
+      if (!expense) throw new NotFoundException(`Expense not found.`);
+
+      return expense;
+    } catch (error) {
+      this.logger.error(`Error while fetching expenses`);
+      throw error;
+    }
   }
 
   /**
@@ -133,6 +169,7 @@ export class ExpensesService {
       if (!!updateDto?.category) {
         const newCategory = await this.categoryService.findOne(
           updateDto.category,
+          null,
           user,
         );
 

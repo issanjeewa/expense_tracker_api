@@ -22,6 +22,7 @@ import { ParseMongoIdPipe } from 'src/common/pipes/parse-mongoid.pipe';
 import { CategoriesService } from './categories.service';
 import { CreateCategoryDTO } from './dto/create-category.dto';
 import { FetchCategoriesDTO } from './dto/fetch-category.dto';
+import { ProjectionCategoryDTO } from './dto/projection-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
 
 @Controller('categories')
@@ -61,9 +62,10 @@ export class CategoriesController {
   @UseInterceptors(ResponseSerializerInterceptor)
   findOne(
     @Param('id', ParseMongoIdPipe) id: string,
+    @Query() projection: ProjectionCategoryDTO,
     @User() user: CurrentUser,
   ) {
-    return this.categoriesService.findOne(id, user);
+    return this.categoriesService.findOne(id, projection, user);
   }
 
   @Auth(Role.ADMIN, Role.USER)

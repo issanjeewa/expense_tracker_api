@@ -164,8 +164,8 @@ export class CategoriesService {
    */
   async findOne(
     id: string,
+    projection: ProjectionCategoryDTO,
     user: CurrentUser,
-    projection?: ProjectionCategoryDTO,
   ) {
     try {
       const select = _.chain(
