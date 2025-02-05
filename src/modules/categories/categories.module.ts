@@ -32,10 +32,16 @@ import { Category, CategorySchema } from './schemas/category.schema';
 })
 export class CategoriesModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
-    consumer.apply(PaginationMiddlewareFactory()).forRoutes({
-      method: RequestMethod.GET,
-      path: 'categories',
-      version: '2',
-    });
+    consumer
+      .apply(
+        PaginationMiddlewareFactory({
+          sortableKeys: ['name', 'type', 'createdAt', 'updatedAt'],
+        }),
+      )
+      .forRoutes({
+        method: RequestMethod.GET,
+        path: 'categories',
+        version: '1',
+      });
   }
 }

@@ -7,13 +7,19 @@ import {
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import * as _ from 'lodash';
-import { Model } from 'mongoose';
+import { FilterQuery, Model } from 'mongoose';
 
 import { CurrentUser } from 'src/auth/types';
 import { CategoryType } from 'src/common/enums/categories.enum';
 import { Role } from 'src/common/enums/roles.enum';
+import { PaginationProps } from 'src/common/middleware/pagination.middleware';
 
 import { CreateCategoryDTO } from './dto/create-category.dto';
+import { FetchCategoriesDTO } from './dto/fetch-category.dto';
+import {
+  ProjectionCategoryDTO,
+  defaultCategoryFields,
+} from './dto/projection-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
 import { Category, CategoryDocument } from './schemas/category.schema';
 
@@ -108,8 +114,47 @@ export class CategoriesService {
     }
   }
 
-  findAll() {
-    return `This action returns all categories`;
+  /**
+   * ANCHOR fetch categories
+   * @param queryDto
+   * @param user
+   */
+  async findAll(
+    queryDto: FetchCategoriesDTO,
+    pagination: PaginationProps,
+    user: CurrentUser,
+  ) {
+    try {
+      const filter: FilterQuery<CategoryDocument> = {
+        $or: [{ user: user.id }, { type: CategoryType.DEFAULT }],
+        ...(!!queryDto?.name && {
+          name: { $regex: queryDto.name, $options: 'i' },
+        }),
+        ...(!!queryDto?.type && { type: queryDto.type }),
+      };
+
+      console.log(pagination);
+
+      const select = _.chain(
+        !!queryDto?.select?.length ? queryDto.select : defaultCategoryFields,
+      )
+        .keyBy()
+        .mapValues(() => 1)
+        .value();
+
+      const categories = await this.categoryModel
+        .find(filter)
+        .select(select)
+        .sort(pagination.sortBy)
+        .skip(pagination.offset)
+        .limit(pagination.limit)
+        .exec();
+
+      return categories;
+    } catch (error) {
+      this.logger.error(`Error while fetching categories: `, error);
+      throw error;
+    }
   }
 
   /**
@@ -117,21 +162,31 @@ export class CategoriesService {
    * @param id
    * @returns
    */
-  async findOne(id: string, user: CurrentUser) {
+  async findOne(
+    id: string,
+    user: CurrentUser,
+    projection?: ProjectionCategoryDTO,
+  ) {
     try {
-      const category = await this.categoryModel.findOne({
-        _id: id,
-        _deleted: false,
-      });
+      const select = _.chain(
+        !!projection?.select?.length
+          ? projection.select
+          : defaultCategoryFields,
+      )
+        .keyBy()
+        .mapValues(() => 1)
+        .value();
 
-      // check whether category is created by the same user or is it default
-      if (
-        !category ||
-        (category.type === CategoryType.USER &&
-          category?.user?._id?.toString() !== user.id)
-      ) {
-        throw new NotFoundException('Category not found');
-      }
+      const category = await this.categoryModel
+        .findOne({
+          $or: [{ type: CategoryType.DEFAULT }, { user: user.id }],
+          _id: id,
+          _deleted: false,
+        })
+        .select(select)
+        .exec();
+
+      if (!category) throw new NotFoundException(`Category not found`);
 
       return category;
     } catch (error) {
