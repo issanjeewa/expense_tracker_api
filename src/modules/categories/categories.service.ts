@@ -55,7 +55,7 @@ export class CategoriesService {
           await checkCategory.save();
           // TODO add to audit log
 
-          return _.pick(checkCategory, 'id', 'name', 'type');
+          return checkCategory;
         }
       } else {
         const category = await this.categoryModel.create({
