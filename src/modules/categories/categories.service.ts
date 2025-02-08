@@ -133,8 +133,6 @@ export class CategoriesService {
         ...(!!queryDto?.type && { type: queryDto.type }),
       };
 
-      console.log(pagination);
-
       const select = _.chain(
         !!queryDto?.select?.length ? queryDto.select : defaultCategoryFields,
       )
