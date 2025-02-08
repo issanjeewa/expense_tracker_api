@@ -203,8 +203,27 @@ export class ExpensesService {
     }
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} expense`;
+  /**
+   * ANCHOR remove expense
+   * @param id
+   * @param user
+   * @returns
+   */
+  async remove(id: string, user: CurrentUser) {
+    try {
+      const exists = await this.expenseModel
+        .exists({ _id: id, user: user.id })
+        .exec();
+
+      if (!exists) throw new NotFoundException(`Expense not found.`);
+
+      await this.expenseModel.findByIdAndDelete(id).exec();
+
+      return { message: `expense deleted` };
+    } catch (error) {
+      this.logger.error(`Error while removing expense.`, error);
+      throw error;
+    }
   }
 
   // SECTION Private (supportive) functions

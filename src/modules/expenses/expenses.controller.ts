@@ -73,7 +73,7 @@ export class ExpensesController {
 
   @Delete(':id')
   @UseInterceptors(ResponseSerializerInterceptor)
-  remove(@Param('id', ParseMongoIdPipe) id: string) {
-    return this.expensesService.remove(+id);
+  remove(@Param('id', ParseMongoIdPipe) id: string, @User() user: CurrentUser) {
+    return this.expensesService.remove(id, user);
   }
 }
