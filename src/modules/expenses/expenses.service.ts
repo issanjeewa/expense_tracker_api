@@ -217,7 +217,7 @@ export class ExpensesService {
       }
       return {
         $gte: fromDate,
-        $lte: new Date(toDate.setDate(toDate.getDate() + 1)),
+        $lte: new Date(toDate.getTime() + 24 * 60 * 60 * 1000),
       };
     } else if (!!fromDate && !toDate) {
       return {
@@ -225,7 +225,7 @@ export class ExpensesService {
       };
     } else if (!fromDate && !!toDate) {
       return {
-        $lte: new Date(toDate.setDate(toDate.getDate() + 1)),
+        $lte: new Date(toDate.getTime() + 24 * 60 * 60 * 1000),
       };
     }
   };
