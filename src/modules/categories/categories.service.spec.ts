@@ -259,7 +259,7 @@ describe('CategoriesService', () => {
 
     const selectSpy = jest.fn().mockReturnThis();
     const leanSpy = jest.fn().mockReturnThis();
-    const execSpy = jest.fn().mockReturnValue(mockCategory);
+    const execSpy = jest.fn().mockResolvedValue(mockCategory);
 
     it(`should fetch category with selection`, async () => {
       jest.spyOn(categoryModel, 'findOne').mockReturnValue({
