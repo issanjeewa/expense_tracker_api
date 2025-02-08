@@ -177,7 +177,7 @@ export class ExpensesService {
         if (!newCategory)
           throw new PreconditionFailedException(`Category not valid.`);
 
-        expense.category = new Types.ObjectId(newCategory.id);
+        expense.category = new Types.ObjectId(newCategory._id);
       }
 
       if (!!updateDto?.amount && updateDto.amount != expense.amount)
