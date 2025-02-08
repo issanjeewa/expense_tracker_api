@@ -63,6 +63,8 @@ describe('ExpensesService', () => {
             findOne: jest.fn(),
             find: jest.fn(),
             create: jest.fn(),
+            exists: jest.fn(),
+            findByIdAndDelete: jest.fn(),
           },
         },
         {
@@ -369,6 +371,40 @@ describe('ExpensesService', () => {
 
       await expect(service.update(id, updateDto, mockUser)).rejects.toThrow(
         PreconditionFailedException,
+      );
+    });
+  });
+
+  describe(`remove`, () => {
+    const id = '67a3d8bd36505969ea30be19';
+    it(`should remove expense`, async () => {
+      jest.spyOn(expenseModel, 'exists').mockReturnValue({
+        exec: jest.fn().mockResolvedValue(true),
+      } as any);
+
+      jest.spyOn(expenseModel, 'findByIdAndDelete').mockReturnValue({
+        exec: jest.fn().mockResolvedValue(mockExpense),
+      } as any);
+
+      const result = await service.remove(id, mockUser);
+
+      expect(expenseModel.exists).toHaveBeenCalledWith({
+        _id: id,
+        user: mockUser.id,
+      });
+
+      expect(expenseModel.findByIdAndDelete).toHaveBeenCalledWith(id);
+
+      expect(result).toEqual({ message: `expense deleted` });
+    });
+
+    it(`should throw not found exception if expense not belong to the user`, async () => {
+      jest.spyOn(expenseModel, 'exists').mockReturnValue({
+        exec: jest.fn().mockResolvedValue(false),
+      } as any);
+
+      await expect(service.remove(id, mockUser)).rejects.toThrow(
+        NotFoundException,
       );
     });
   });
