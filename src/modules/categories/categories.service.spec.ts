@@ -6,9 +6,11 @@ import { Model } from 'mongoose';
 import { CurrentUser } from 'src/auth/types';
 import { CategoryType } from 'src/common/enums/categories.enum';
 import { Role } from 'src/common/enums/roles.enum';
+import { PaginationProps } from 'src/common/middleware/pagination.middleware';
 
 import { CategoriesService } from './categories.service';
 import { CreateCategoryDTO } from './dto/create-category.dto';
+import { FetchCategoriesDTO } from './dto/fetch-category.dto';
 import { Category, CategoryDocument } from './schemas/category.schema';
 
 describe('CategoriesService', () => {
@@ -43,15 +45,7 @@ describe('CategoriesService', () => {
           useValue: {
             findOne: jest.fn(),
             create: jest.fn(),
-            find: jest.fn().mockReturnValue({
-              select: jest.fn().mockReturnValue({
-                sort: jest.fn().mockReturnValue({
-                  skip: jest.fn().mockReturnValue({
-                    limit: jest.fn().mockReturnValue([mockCategory]),
-                  }),
-                }),
-              }),
-            }),
+            find: jest.fn(),
           },
         },
       ],
@@ -213,6 +207,51 @@ describe('CategoriesService', () => {
       expect(deletedCategory.save).toHaveBeenCalled();
 
       expect(result).toEqual({ ...deletedCategory, _deleted: false });
+    });
+  });
+
+  describe(`findAll`, () => {
+    it(`should fetch categories with pagination and filters`, async () => {
+      const queryDto = new FetchCategoriesDTO();
+      queryDto.name = `Test`;
+      queryDto.type = CategoryType.USER;
+      queryDto.select = ['name', 'type', 'user', 'createdAt', 'updatedAt'];
+
+      const pagination: PaginationProps = {
+        limit: 50,
+        offset: 0,
+        page: 1,
+        sortBy: [['createdAt', 'desc']],
+      };
+
+      // Spy on the chained methods
+      const selectSpy = jest.fn().mockReturnThis();
+      const sortSpy = jest.fn().mockReturnThis();
+      const skipSpy = jest.fn().mockReturnThis();
+      const limitSpy = jest.fn().mockReturnThis();
+      const execSpy = jest.fn().mockResolvedValue([mockCategory]);
+
+      jest.spyOn(categoryModel, 'find').mockReturnValue({
+        select: selectSpy,
+        sort: sortSpy,
+        skip: skipSpy,
+        limit: limitSpy,
+        exec: execSpy,
+      } as any);
+
+      const result = await service.findAll(queryDto, pagination, mockUser);
+
+      expect(categoryModel.find).toHaveBeenCalledWith({
+        $or: [{ user: mockUser.id }, { type: CategoryType.DEFAULT }],
+        name: { $regex: queryDto.name, $options: 'i' },
+        type: queryDto.type,
+      });
+
+      expect(sortSpy).toHaveBeenCalledWith([['createdAt', 'desc']]);
+      expect(skipSpy).toHaveBeenCalledWith(0);
+      expect(limitSpy).toHaveBeenCalledWith(50);
+
+      expect(result).toEqual([mockCategory]);
     });
   });
 });
