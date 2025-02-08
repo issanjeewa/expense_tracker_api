@@ -18,7 +18,7 @@ describe('CategoriesService', () => {
   const mockCategory = {
     _id: '679c9a1a932f10f24fdd8ac9',
     name: 'Test Category',
-    type: 'user',
+    type: CategoryType.USER,
     user: '679bbbf2364d56bb500061af',
     _deleted: false,
     createdAt: '2025-01-31T09:38:34.013Z',
@@ -134,6 +134,80 @@ describe('CategoriesService', () => {
       expect(categoryModel.findOne).toHaveBeenCalledWith({
         name: createDto.name,
         user: mockUser.id,
+      });
+
+      expect(deletedCategory.save).toHaveBeenCalled();
+
+      expect(result).toEqual({ ...deletedCategory, _deleted: false });
+    });
+  });
+
+  describe('createDefaultCategory', () => {
+    const createDto = new CreateCategoryDTO();
+    createDto.name = `Test Category`;
+
+    const mockDefaultCategory = { ...mockCategory, type: CategoryType.DEFAULT };
+    delete mockDefaultCategory.user;
+
+    it(`should create new category if it not exists`, async () => {
+      jest.spyOn(categoryModel, 'findOne').mockImplementationOnce(
+        () =>
+          ({
+            exec: jest.fn().mockReturnValueOnce(null),
+          }) as any,
+      );
+
+      jest
+        .spyOn(categoryModel, 'create')
+        .mockResolvedValueOnce(mockDefaultCategory as any);
+
+      const result = await service.createDefaultCategory(createDto);
+
+      expect(categoryModel.findOne).toHaveBeenCalledWith({
+        name: createDto.name,
+        type: CategoryType.DEFAULT,
+      });
+
+      expect(categoryModel.create).toHaveBeenCalledWith({
+        ...createDto,
+        type: CategoryType.DEFAULT,
+      });
+
+      expect(result).toEqual(mockDefaultCategory);
+    });
+
+    it(`should return conflict exception if category already exists`, async () => {
+      jest.spyOn(categoryModel, 'findOne').mockImplementationOnce(
+        () =>
+          ({
+            exec: jest.fn().mockReturnValueOnce(mockDefaultCategory),
+          }) as any,
+      );
+
+      await expect(service.createDefaultCategory(createDto)).rejects.toThrow(
+        ConflictException,
+      );
+    });
+
+    it(`should restore if same category was found deleted`, async () => {
+      const deletedCategory = {
+        ...mockDefaultCategory,
+        _deleted: true,
+        save: jest.fn().mockReturnThis(),
+      };
+
+      jest.spyOn(categoryModel, 'findOne').mockImplementationOnce(
+        () =>
+          ({
+            exec: jest.fn().mockReturnValueOnce(deletedCategory),
+          }) as any,
+      );
+
+      const result = await service.createDefaultCategory(createDto);
+
+      expect(categoryModel.findOne).toHaveBeenCalledWith({
+        name: createDto.name,
+        type: CategoryType.DEFAULT,
       });
 
       expect(deletedCategory.save).toHaveBeenCalled();
