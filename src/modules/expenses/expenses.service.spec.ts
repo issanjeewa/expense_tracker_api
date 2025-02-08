@@ -1,4 +1,4 @@
-import { NotFoundException } from '@nestjs/common';
+import { NotFoundException, PreconditionFailedException } from '@nestjs/common';
 import { getModelToken } from '@nestjs/mongoose';
 import { Test, TestingModule } from '@nestjs/testing';
 import { Model, Types } from 'mongoose';
@@ -12,6 +12,7 @@ import { CategoriesService } from '../categories/categories.service';
 import { CreateExpenseDTO } from './dto/create-expense.dto';
 import { FetchExpenseDTO } from './dto/fetch-expenses.dto';
 import { ProjectionExpenseDTO } from './dto/projection-expense.dto';
+import { UpdateExpenseDTO } from './dto/update-expense.dto';
 import { ExpensesService } from './expenses.service';
 import { Expense, ExpenseDocument } from './schemas/expense.schema';
 
@@ -284,6 +285,90 @@ describe('ExpensesService', () => {
 
       await expect(service.findOne(id, projection, mockUser)).rejects.toThrow(
         NotFoundException,
+      );
+    });
+  });
+
+  describe(`update`, () => {
+    const newCategory = {
+      id: '679c9f3c6117b2aad8bf91fa',
+      name: 'Fuel',
+      type: 'user',
+      user: '679253b7bd8b12908a98df0a',
+      _deleted: false,
+      createdAt: '2025-01-31T10:00:28.962Z',
+      updatedAt: '2025-02-03T13:32:57.357Z',
+      __v: 0,
+    };
+
+    const id = '67a3d8bd36505969ea30be19';
+    const updateDto = new UpdateExpenseDTO();
+    updateDto.amount = 50.0;
+    updateDto.category = '679c9f3c6117b2aad8bf91fa';
+    updateDto.currency = 'USD';
+    updateDto.date = new Date('2025-02-28');
+    updateDto.description = 'Updated description';
+
+    it(`should update the expense`, async () => {
+      const mockExpenseDoc = {
+        ...mockExpense,
+        save: jest.fn().mockReturnThis(),
+      };
+
+      jest.spyOn(expenseModel, 'findOne').mockReturnValue({
+        exec: jest.fn().mockResolvedValue(mockExpenseDoc),
+      } as any);
+
+      jest
+        .spyOn(categoryService, 'findOne')
+        .mockResolvedValue(newCategory as any);
+
+      const result = await service.update(id, updateDto, mockUser);
+
+      expect(expenseModel.findOne).toHaveBeenCalledWith({
+        _id: id,
+        user: mockUser.id,
+      });
+
+      expect(categoryService.findOne).toHaveBeenCalledWith(
+        updateDto.category,
+        null,
+        mockUser,
+      );
+
+      expect(result).toEqual({
+        ...mockExpenseDoc,
+        amount: updateDto.amount,
+        currency: updateDto.currency,
+        date: updateDto.date,
+        description: updateDto.description,
+      });
+    });
+
+    it(`should throw not found exception if expense is not found`, async () => {
+      jest.spyOn(expenseModel, 'findOne').mockReturnValue({
+        exec: jest.fn().mockResolvedValue(null),
+      } as any);
+
+      await expect(service.update(id, updateDto, mockUser)).rejects.toThrow(
+        NotFoundException,
+      );
+    });
+
+    it(`should throw precondition failed exception if new category is not valid`, async () => {
+      const mockExpenseDoc = {
+        ...mockExpense,
+        save: jest.fn().mockReturnThis(),
+      };
+
+      jest.spyOn(expenseModel, 'findOne').mockReturnValue({
+        exec: jest.fn().mockResolvedValue(mockExpenseDoc),
+      } as any);
+
+      jest.spyOn(categoryService, 'findOne').mockResolvedValue(null);
+
+      await expect(service.update(id, updateDto, mockUser)).rejects.toThrow(
+        PreconditionFailedException,
       );
     });
   });
