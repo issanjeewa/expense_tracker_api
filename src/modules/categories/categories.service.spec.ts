@@ -237,6 +237,13 @@ describe('CategoriesService', () => {
         type: queryDto.type,
       });
 
+      expect(selectSpy).toHaveBeenCalledWith({
+        name: 1,
+        type: 1,
+        user: 1,
+        createdAt: 1,
+        updatedAt: 1,
+      });
       expect(sortSpy).toHaveBeenCalledWith([['createdAt', 'desc']]);
       expect(skipSpy).toHaveBeenCalledWith(0);
       expect(limitSpy).toHaveBeenCalledWith(50);
