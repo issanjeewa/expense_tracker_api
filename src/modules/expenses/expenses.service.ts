@@ -138,7 +138,8 @@ export class ExpensesService {
           user: user.id,
         })
         .select(select)
-        .lean({ virtuals: true });
+        .lean({ virtuals: true })
+        .exec();
 
       if (!expense) throw new NotFoundException(`Expense not found.`);
 

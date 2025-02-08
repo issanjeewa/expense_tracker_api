@@ -1,3 +1,4 @@
+import { NotFoundException } from '@nestjs/common';
 import { getModelToken } from '@nestjs/mongoose';
 import { Test, TestingModule } from '@nestjs/testing';
 import { Model, Types } from 'mongoose';
@@ -10,6 +11,7 @@ import { PaginationProps } from 'src/common/middleware/pagination.middleware';
 import { CategoriesService } from '../categories/categories.service';
 import { CreateExpenseDTO } from './dto/create-expense.dto';
 import { FetchExpenseDTO } from './dto/fetch-expenses.dto';
+import { ProjectionExpenseDTO } from './dto/projection-expense.dto';
 import { ExpensesService } from './expenses.service';
 import { Expense, ExpenseDocument } from './schemas/expense.schema';
 
@@ -217,6 +219,72 @@ describe('ExpensesService', () => {
       expect(spyLean).toHaveBeenCalledWith({ virtuals: true });
 
       expect(result).toEqual([mockExpense]);
+    });
+  });
+
+  describe(`findOne`, () => {
+    const projection = new ProjectionExpenseDTO();
+    projection.select = [
+      'category',
+      'currency',
+      'amount',
+      'description',
+      'date',
+      'createdAt',
+    ];
+    const id = '67a3d8bd36505969ea30be19';
+
+    const expectedExpense = {
+      category: mockExpense.category,
+      currency: mockExpense.currency,
+      amount: mockExpense.amount,
+      description: mockExpense.description,
+      date: mockExpense.date,
+      createdAt: mockExpense.createdAt,
+    };
+
+    // Mock the chained methods
+    const selectSpy = jest.fn().mockReturnThis();
+    const leanSpy = jest.fn().mockReturnThis();
+    const execSpy = jest.fn().mockResolvedValue(expectedExpense); // Resolve to mockExpense
+
+    it(`should fetch expense with selection`, async () => {
+      // Mock the findOne method
+      jest.spyOn(expenseModel, 'findOne').mockReturnValue({
+        select: selectSpy,
+        lean: leanSpy,
+        exec: execSpy,
+      } as any);
+
+      const result = await service.findOne(id, projection, mockUser);
+
+      // Verify the select method
+      expect(selectSpy).toHaveBeenCalledWith({
+        category: 1,
+        currency: 1,
+        amount: 1,
+        description: 1,
+        date: 1,
+        createdAt: 1,
+      });
+
+      // Verify the lean method
+      expect(leanSpy).toHaveBeenCalledWith({ virtuals: true });
+
+      // Verify the result
+      expect(result).toEqual(expectedExpense);
+    });
+
+    it(`should throw not found exception if expense not found`, async () => {
+      jest.spyOn(expenseModel, 'findOne').mockReturnValue({
+        select: selectSpy,
+        lean: leanSpy,
+        exec: jest.fn().mockResolvedValue(null),
+      } as any);
+
+      await expect(service.findOne(id, projection, mockUser)).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 });
