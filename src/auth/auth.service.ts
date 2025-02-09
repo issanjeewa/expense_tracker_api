@@ -15,11 +15,17 @@ export class AuthService {
     private jwtService: JwtService,
   ) {}
 
+  /**
+   * ANCHOR validate user
+   * @param username
+   * @param pass
+   * @returns
+   */
   async validateUser(username: string, pass: string): Promise<CurrentUser> {
     try {
       const user = await this.userService.findOne(username);
 
-      if (!user.active) {
+      if (!user?.active) {
         throw new UnauthorizedException(`User is inactive.`);
       }
 
@@ -44,9 +50,14 @@ export class AuthService {
     }
   }
 
+  /**
+   * return access token
+   * @param user
+   * @returns
+   */
   async login(user: CurrentUser) {
     return {
-      access_token: this.jwtService.sign(user),
+      access_token: await this.jwtService.signAsync(user),
     };
   }
 }
