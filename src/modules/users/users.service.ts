@@ -120,6 +120,7 @@ export class UsersService {
   }
 
   findAll() {
+    // TODO
     return `This action returns all users`;
   }
 
@@ -148,10 +149,12 @@ export class UsersService {
   }
 
   update(id: number, updateUserDto: UpdateUserDto) {
+    // TODO
     return `This action updates a #${id} user ${updateUserDto}`;
   }
 
   remove(id: number) {
+    // TODO
     return `This action removes a #${id} user`;
   }
 }
