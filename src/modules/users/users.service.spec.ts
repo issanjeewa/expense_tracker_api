@@ -213,4 +213,46 @@ describe('UsersService', () => {
       ).rejects.toThrow(ConflictException);
     });
   });
+
+  describe(`findOne`, () => {
+    it(`should return user for user id`, async () => {
+      jest.spyOn(userModel, 'findOne').mockReturnValue({
+        lean: jest.fn().mockReturnThis(),
+        exec: jest.fn().mockResolvedValue(mockUserDoc),
+      } as any);
+
+      const result = await service.findOne(mockUserDoc.id);
+
+      expect(userModel.findOne).toHaveBeenCalledWith({
+        _id: mockUserDoc.id,
+        _deleted: false,
+      });
+      expect(result).toEqual(mockUserDoc);
+    });
+
+    it(`should return user for user email`, async () => {
+      jest.spyOn(userModel, 'findOne').mockReturnValue({
+        lean: jest.fn().mockReturnThis(),
+        exec: jest.fn().mockResolvedValue(mockUserDoc),
+      } as any);
+
+      const result = await service.findOne(mockUserDoc.email);
+
+      expect(userModel.findOne).toHaveBeenCalledWith({
+        email: mockUserDoc.email,
+        _deleted: false,
+      });
+      expect(result).toEqual(mockUserDoc);
+    });
+
+    it(`should throw not found exception if user not found`, async () => {
+      jest.spyOn(userModel, 'findOne').mockReturnValue({
+        lean: jest.fn().mockReturnThis(),
+        exec: jest.fn().mockResolvedValue(null),
+      } as any);
+      await expect(service.findOne(mockUserDoc.id)).rejects.toThrow(
+        NotFoundException,
+      );
+    });
+  });
 });
