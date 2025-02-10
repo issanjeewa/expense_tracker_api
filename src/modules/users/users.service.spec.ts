@@ -1,4 +1,4 @@
-import { ConflictException } from '@nestjs/common';
+import { ConflictException, NotFoundException } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { getModelToken } from '@nestjs/mongoose';
 import { Test, TestingModule } from '@nestjs/testing';
@@ -123,6 +123,94 @@ describe('UsersService', () => {
       await expect(service.create(createDto)).rejects.toThrow(
         ConflictException,
       );
+    });
+  });
+
+  describe(`verifyEmail`, () => {
+    const mockToken = 'mock-verify-token';
+
+    it(`should verify email and activate user`, async () => {
+      const _mockUserDoc = {
+        ...mockUserDoc,
+        verificationToken: mockToken,
+        active: false,
+        save: jest.fn(),
+      };
+      const token = _mockUserDoc.verificationToken;
+
+      jest.spyOn(userModel, 'findOne').mockReturnValue({
+        exec: jest.fn().mockResolvedValue(_mockUserDoc),
+      } as any);
+      jest.spyOn(bcrypt, 'compare').mockImplementation(() => true);
+
+      const result = await service.verifyEmail(_mockUserDoc.id, token);
+
+      expect(userModel.findOne).toHaveBeenCalledWith({
+        _id: _mockUserDoc.id,
+        _deleted: false,
+      });
+      expect(bcrypt.compare).toHaveBeenCalledWith(token, token);
+      expect(_mockUserDoc).toEqual({
+        ..._mockUserDoc,
+        verificationToken: null,
+        active: true,
+      });
+      expect(result).toEqual({
+        id: _mockUserDoc.id,
+        email: _mockUserDoc.email,
+        name: _mockUserDoc.name,
+        active: _mockUserDoc.active,
+      });
+    });
+
+    it(`should return not found exception if user is active`, async () => {
+      const _mockUserDoc = {
+        ...mockUserDoc,
+        verificationToken: mockToken,
+        active: false,
+        save: jest.fn(),
+      };
+      jest.spyOn(userModel, 'findOne').mockReturnValue({
+        exec: jest.fn().mockResolvedValue({ ..._mockUserDoc, active: true }),
+      } as any);
+
+      await expect(
+        service.verifyEmail(_mockUserDoc.id, _mockUserDoc.verificationToken),
+      ).rejects.toThrow(NotFoundException);
+    });
+
+    it(`should return not found exception if user not found`, async () => {
+      const _mockUserDoc = {
+        ...mockUserDoc,
+        verificationToken: mockToken,
+        active: false,
+        save: jest.fn(),
+      };
+      jest.spyOn(userModel, 'findOne').mockReturnValue({
+        exec: jest.fn().mockResolvedValue(null),
+      } as any);
+
+      await expect(
+        service.verifyEmail(_mockUserDoc.id, _mockUserDoc.verificationToken),
+      ).rejects.toThrow(NotFoundException);
+    });
+
+    it(`should return not found exception if token is not valid`, async () => {
+      const _mockUserDoc = {
+        ...mockUserDoc,
+        verificationToken: mockToken,
+        active: false,
+        save: jest.fn(),
+      };
+
+      jest.spyOn(userModel, 'findOne').mockReturnValue({
+        exec: jest.fn().mockResolvedValue(_mockUserDoc),
+      } as any);
+      jest.spyOn(bcrypt, 'compare').mockImplementation(() => false);
+
+      await expect(
+        service.verifyEmail(_mockUserDoc.id, _mockUserDoc.verificationToken),
+      ).rejects.toThrow(ConflictException);
     });
   });
 });

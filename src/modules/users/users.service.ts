@@ -97,9 +97,9 @@ export class UsersService {
         .exec();
 
       if (!user?.verificationToken || user?.active) {
-        this.logger.log(
+        this.logger.error(
           `User already verified or token not found, terminating verification`,
-          user.email,
+          `userId: ${userId}`,
         );
         throw new NotFoundException('Invalid user or token');
       }
