@@ -70,7 +70,7 @@ describe('AuthService', () => {
 
     it(`should return current-user object after successful validation`, async () => {
       jest.spyOn(usersService, 'findOne').mockResolvedValue(mockUserDoc as any);
-      jest.spyOn(bcrypt, 'compare').mockResolvedValue(true as never);
+      jest.spyOn(bcrypt, 'compare').mockImplementation(() => true);
 
       const result = await service.validateUser(mockUsername, mockPassword);
 
@@ -102,7 +102,7 @@ describe('AuthService', () => {
 
     it(`should return null if user password not matching`, async () => {
       jest.spyOn(usersService, 'findOne').mockResolvedValue(mockUserDoc as any);
-      jest.spyOn(bcrypt, 'compare').mockResolvedValue(false as never);
+      jest.spyOn(bcrypt, 'compare').mockImplementation(() => false);
 
       const result = await service.validateUser(mockUsername, mockPassword);
       expect(usersService.findOne).toHaveBeenCalledWith(mockUsername);
@@ -118,9 +118,7 @@ describe('AuthService', () => {
     it(`should return access token`, async () => {
       const mockAccessToken = `TestAccessToken`;
 
-      jest
-        .spyOn(jwtService, 'signAsync')
-        .mockResolvedValue(mockAccessToken as never);
+      jest.spyOn(jwtService, 'signAsync').mockResolvedValue(mockAccessToken);
 
       const result = await service.login(mockCurrentUser);
 
