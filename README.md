@@ -6,6 +6,7 @@ Sample expence tracker api backend using [Nest](https://github.com/nestjs/nest) 
 includes:
 - Passport JWT Authentication
 - Swagger API Documentation
+- Unit tests with Jest
 
 ## Project setup
 
