@@ -1,7 +1,7 @@
 
 ## Description
 
-Sample expence tracker api backend using [Nest](https://github.com/nestjs/nest) framework.
+Simple expence tracker api backend using [Nest](https://github.com/nestjs/nest) framework.
 <br/> <br/>
 includes:
 - Passport JWT Authentication
